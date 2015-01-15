@@ -1,0 +1,137 @@
+<h:html xmlns="http://www.w3.org/2002/xforms" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:h="http://www.w3.org/1999/xhtml" xmlns:jr="http://openrosa.org/javarosa" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <h:head>
+    <h:title>hdb FAIMS Community Server</h:title>
+    <model>
+      <instance>
+        <faims id="hdb_FAIMS_Community_Server">
+          <style>
+            <orientation>
+              <orientation/>
+            </orientation>
+            <even>
+              <layout_weight/>
+            </even>
+            <large>
+              <layout_weight/>
+            </large>
+          </style>
+          <user>
+            <usertab>
+              <users/>
+              <login/>
+            </usertab>
+          </user>
+          <Artefacts>
+            <Artefact>
+              <Photos/>
+              <Take_Picture/>
+              <Artefact_Type/>
+              <Description/>
+              <Current_Point/>
+              <Cancel/>
+              <Save/>
+            </Artefact>
+            <Map/>
+          </Artefacts>
+        </faims>
+      </instance>
+      <!-- Insert nodeset bindings here -->
+    </model>
+  </h:head>
+  <h:body>
+    <group ref="style">
+      <label/>
+      <group ref="orientation">
+        <label/>
+        <input ref="orientation">
+          <label>horizontal</label>
+        </input>
+      </group>
+      <group ref="even">
+        <label/>
+        <input ref="layout_weight">
+          <label>1</label>
+        </input>
+      </group>
+      <group ref="large">
+        <label/>
+        <input ref="layout_weight">
+          <label>3</label>
+        </input>
+      </group>
+    </group>
+    <group ref="user">
+      <label>{User_List}</label>
+      <group ref="usertab">
+        <label>{User_List}</label>
+        <select1 ref="users" faims_style_class="user-list">
+          <label>{Users}:</label>
+          <item>
+            <label>placeholder</label>
+            <value>placeholder</value>
+          </item>
+        </select1>
+        <trigger ref="login">
+          <label>{Login}</label>
+        </trigger>
+      </group>
+    </group>
+    <group ref="Artefacts" faims_archent_type="Artefact">
+      <label>{Artefacts}</label>
+      <group ref="Artefact">
+        <label>{Artefact}</label>
+        <select type="camera" faims_sync="true" ref="Photos" faims_attribute_name="Photo" faims_attribute_type="vocab">
+          <label>{Photos}</label>
+          <item>
+            <label>placeholder</label>
+            <value>placeholder</value>
+          </item>
+        </select>
+        <trigger ref="Take_Picture">
+          <label>{Take_Picture}</label>
+        </trigger>
+        <select1 type="image" ref="Artefact_Type" faims_attribute_name="Artefact Type" faims_attribute_type="vocab">
+          <label>{Artefact_Type}</label>
+          <item>
+            <label>placeholder</label>
+            <value>placeholder</value>
+          </item>
+        </select1>
+        <input ref="Description" faims_attribute_name="Description" faims_attribute_type="measure">
+          <label>{Description}</label>
+        </input>
+        <trigger ref="Current_Point">
+          <label>{Current_Point}</label>
+        </trigger>
+        <trigger ref="Cancel">
+          <label>{Cancel}</label>
+        </trigger>
+        <trigger ref="Save">
+          <label>{Save}</label>
+        </trigger>
+      </group>
+      <group ref="Map" faims_scrollable="false">
+        <label>Map</label>
+         <input ref="map" faims_map="true" faims_certainty="false">
+          <label/>
+        </input>
+        <group faims_style="orientation" ref="container1">
+          <label/>
+          <group faims_style="even" ref="child1">
+            <label/>
+            <trigger ref="centre">
+              <label>Centre on Me</label>
+            </trigger>
+          </group>
+          <group faims_style="even" ref="child2">
+            <label/>
+            <trigger ref="saveSettings">
+              <label>Save Map Settings</label>
+            </trigger>
+          </group>
+        </group>
+      </group>
+    </group>
+  </h:body>
+</h:html>
+

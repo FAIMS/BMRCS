@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSchema>
+  <ArchaeologicalElement name="Artefact">
+    <description></description>
+    <property name="Photo" type="file" file="true" thumbnail="true">
+      <description/>
+    </property>
+    <property name="Artefact Type" type="enum">
+      <description/>
+      <lookup>
+        <term pictureURL="files/data/gallery/test1.png"> {Bucket}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test2.png"> {Tower}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test3.png"> {Tower_Pole}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test4.png"> {Haul_Rope_Wheel_Frame}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test5.png"> {Tower_Bolt}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test6.png"> {Tension_Station}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test7.png"> {Tension_Station_Bolt}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test8.png"> {Track_Crossbar}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test9.png"> {Track_Rope}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test10.png"> {Haul_Rope}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test11.png"> {Rope_Joiner}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test12.png"> {Rope_Groove}
+          <description/>
+        </term>
+        <term pictureURL="files/data/gallery/test12.png"> {Other}
+      </lookup>
+    </property>
+    <property name="Description" type="freetext">
+      <description/>
+    </property>
+  </ArchaeologicalElement>
+</dataSchema>
