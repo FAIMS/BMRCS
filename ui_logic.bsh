@@ -1,0 +1,72 @@
+import java.util.concurrent.Callable;
+User user; // dont touch
+String userid;
+
+setSyncEnabled(true);
+setFileSyncEnabled(true);
+
+
+addActionBarItem("show_login", new ActionButtonCallback() {
+    actionOnLabel() {
+        "Change User";
+    }
+    actionOn() {
+        showTabGroup("User");
+    }
+});
+
+makeLocalID() {
+    fetchOne("CREATE TABLE IF NOT EXISTS localSettings (key text primary key, value text);", null);
+    fetchOne("drop view if exists identifierAsSpreadsheet;", null);
+    fetchOne("create view identifierAsSpreadsheet as select uuid, group_concat(coalesce(measure || ' ' || vocabname || '(' ||freetext||')',  measure || ' (' || freetext ||')',  vocabname || ' (' || freetext ||')',  measure || ' ' || vocabname ,  vocabname || ' (' || freetext || ')',  measure || ' (' || freetext || ')',  measure,  vocabname,  freetext,  measure,  vocabname,  freetext), ' ') as response from (select * from latestNonDeletedArchentIdentifiers order by attributename) group by uuid;", null);
+}
+
+makeLocalID();
+
+
+
+
+
+/*** Uneditable - you can edit the code below with extreme precaution ***/
+/*** USER ***/
+
+loadUsers() {
+    fetchAll("select userid, fname || ' ' || lname from user", new FetchCallback() {
+        onFetch(result) {
+            populateDropDown("user/usertab/users", result);
+        }
+    });
+    fetchOne("select value from localSettings where key = 'User';", new FetchCallback() {
+        onFetch(result) {
+            if(!isNull(result)) {
+                fetchOne("select userid,fname,lname,email from user where userid='" +result + "';", new FetchCallback() {
+                    onFetch(userid) {
+                        user = new User(result.get(0),result.get(1),result.get(2),result.get(3));
+                        setUser(user);
+                        username = result.get(1) + " " + result.get(2);
+                        showTabGroup("control");
+                    }
+                });
+            }
+        }
+    });
+}
+
+String username = "";
+String device = "";
+
+login() {
+    
+    fetchOne("select userid,fname,lname,email from user where userid='" + getListItemValue() + "';", new FetchCallback() {
+        onFetch(result) {
+            user = new User(result.get(0),result.get(1),result.get(2),result.get(3));
+            setUser(user);
+            username = result.get(1) + " " + result.get(2);
+            fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+userid+"');", null);
+            showTabGroup("control");
+        }
+    });
+}
+
+loadUsers();
+onEvent("user/usertab/users", "click", "login()");
