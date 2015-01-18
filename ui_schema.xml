@@ -111,7 +111,7 @@
         </trigger>
       </group>
       <group ref="Map" faims_scrollable="false">
-        <label>Map</label>
+        <label>{Map}</label>
          <input ref="map" faims_map="true" faims_certainty="false">
           <label/>
         </input>
@@ -119,14 +119,14 @@
           <label/>
           <group faims_style="even" ref="child1">
             <label/>
-            <trigger ref="centre">
-              <label>Centre on Me</label>
+            <trigger ref="Map_Centre">
+              <label>{Map_Centre}</label>
             </trigger>
           </group>
           <group faims_style="even" ref="child2">
             <label/>
-            <trigger ref="saveSettings">
-              <label>Save Map Settings</label>
+            <trigger ref="Map_Settings">
+              <label>{Map_Settings}</label>
             </trigger>
           </group>
         </group>
