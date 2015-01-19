@@ -11,7 +11,7 @@ addActionBarItem("show_login", new ActionButtonCallback() {
         "Change User";
     }
     actionOn() {
-        showTabGroup("User");
+        showTabGroup("user");
     }
 });
 
@@ -47,15 +47,20 @@ loadUsers() {
     fetchOne("select value from localSettings where key = 'User';", new FetchCallback() {
         onFetch(result) {
             if(!isNull(result)) {
-                fetchOne("select userid,fname,lname,email from user where userid='" +result + "';", new FetchCallback() {
-                    onFetch(userid) {
-                        user = new User(result.get(0),result.get(1),result.get(2),result.get(3));
+                fetchOne("select userid,fname,lname,email from user where userid=" +result.get(0), new FetchCallback() {
+                    onFetch(userdata) {
+                        print(userid);
+                        user = new User(userdata.get(0),userdata.get(1),userdata.get(2),userdata.get(3));
                         setUser(user);
-                        username = result.get(1) + " " + result.get(2);
-                        showTabGroup("control");
+                        username = userdata.get(1) + " " + userdata.get(2);
+                        showTabGroup("Artefacts");
                     }
                 });
             }
+        }
+
+        onError(message) {
+                    showToast(message);
         }
     });
 }
@@ -64,17 +69,17 @@ String username = "";
 String device = "";
 
 login() {
-    
-    fetchOne("select userid,fname,lname,email from user where userid='" + getListItemValue() + "';", new FetchCallback() {
+    userid = getFieldValue("user/usertab/users");
+    fetchOne("select userid,fname,lname,email from user where userid='" + userid + "';", new FetchCallback() {
         onFetch(result) {
             user = new User(result.get(0),result.get(1),result.get(2),result.get(3));
             setUser(user);
             username = result.get(1) + " " + result.get(2);
-            fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+userid+"');", null);
-            showTabGroup("control");
+            fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+ userid +"');", null);
+            showTabGroup("Artefacts");
         }
     });
 }
 
 loadUsers();
-onEvent("user/usertab/users", "click", "login()");
+onEvent("user/usertab/login", "click", "login()");

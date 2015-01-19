@@ -31,7 +31,17 @@
               <Cancel/>
               <Save/>
             </Artefact>
-            <Map/>
+            <Map>
+              <map/>
+              <container1>
+                <child1>
+                  <Map_Centre/>
+                </child1>
+                <child2>
+                  <Map_Settings/>
+                </child2>
+              </container1>
+            </Map>
           </Artefacts>
         </faims>
       </instance>
