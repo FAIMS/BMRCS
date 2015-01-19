@@ -5,6 +5,17 @@ String userid;
 setSyncEnabled(true);
 setFileSyncEnabled(true);
 
+/** Local Settings **/
+
+makeLocalID() {
+    fetchOne("CREATE TABLE IF NOT EXISTS localSettings (key text primary key, value text);", null);
+    fetchOne("drop view if exists identifierAsSpreadsheet;", null);
+    fetchOne("create view identifierAsSpreadsheet as select uuid, group_concat(coalesce(measure || ' ' || vocabname || '(' ||freetext||')',  measure || ' (' || freetext ||')',  vocabname || ' (' || freetext ||')',  measure || ' ' || vocabname ,  vocabname || ' (' || freetext || ')',  measure || ' (' || freetext || ')',  measure,  vocabname,  freetext,  measure,  vocabname,  freetext), ' ') as response from (select * from latestNonDeletedArchentIdentifiers order by attributename) group by uuid;", null);
+}
+
+makeLocalID();
+
+/** Action Bar **/
 
 addActionBarItem("show_login", new ActionButtonCallback() {
     actionOnLabel() {
@@ -15,27 +26,6 @@ addActionBarItem("show_login", new ActionButtonCallback() {
     }
 });
 
-makeLocalID() {
-    fetchOne("CREATE TABLE IF NOT EXISTS localSettings (key text primary key, value text);", null);
-    fetchOne("drop view if exists identifierAsSpreadsheet;", null);
-    fetchOne("create view identifierAsSpreadsheet as select uuid, group_concat(coalesce(measure || ' ' || vocabname || '(' ||freetext||')',  measure || ' (' || freetext ||')',  vocabname || ' (' || freetext ||')',  measure || ' ' || vocabname ,  vocabname || ' (' || freetext || ')',  measure || ' (' || freetext || ')',  measure,  vocabname,  freetext,  measure,  vocabname,  freetext), ' ') as response from (select * from latestNonDeletedArchentIdentifiers order by attributename) group by uuid;", null);
-}
-
-makeLocalID();
-
-onEvent("Artefacts/Artefact/Take_Picture", "delayclick", "attachPictureTo(\"Artefacts/Artefact/Photos\");");
-
-fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attributekey using (attributeid) where attributename = 'Artefact Type';", new FetchCallback () {
-    onFetch(pictures) {
-        populatePictureGallery("Artefacts/Artefact/ArtefactType", pictures);
-    }
-});
-
-
-
-
-
-/*** Uneditable - you can edit the code below with extreme precaution ***/
 /*** USER ***/
 
 loadUsers() {
@@ -49,7 +39,6 @@ loadUsers() {
             if(!isNull(result)) {
                 fetchOne("select userid,fname,lname,email from user where userid=" +result.get(0), new FetchCallback() {
                     onFetch(userdata) {
-                        print(userid);
                         user = new User(userdata.get(0),userdata.get(1),userdata.get(2),userdata.get(3));
                         setUser(user);
                         username = userdata.get(1) + " " + userdata.get(2);
@@ -83,3 +72,77 @@ login() {
 
 loadUsers();
 onEvent("user/usertab/login", "click", "login()");
+
+/** Artefact data entry **/
+
+onEvent("Artefacts/Artefact/Take_Picture", "delayclick", "attachPictureTo(\"Artefacts/Artefact/Photos\");");
+
+fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attributekey using (attributeid) where attributename = 'Artefact Type';", new FetchCallback () {
+    onFetch(pictures) {
+        populatePictureGallery("Artefacts/Artefact/ArtefactType", pictures);
+    }
+});
+
+/** Artefact saving **/
+
+clearPage() {
+    artefact_id = null;
+    newTab("Artefacts/Artefact");
+}
+
+promptClearPage() {
+    showAlert("alert", "Warning: Do you want to delete all data on the page?", "clearPage", "");
+}
+
+onEvent("Artefacts/Artefact/Cancel", "click", "promptClearPage()");
+
+artefact_id = null;
+
+saveArtefact() {
+    saveTabGroup("Artefacts", artefact_id, null, null, new SaveCallback() {
+        onSave(uuid, newRecord) {
+            //artefact_id = uuid;
+            showToast("New artefact saved");
+            clearPage();
+        }
+    });
+}
+
+promptSave() {
+    showAlert("alert", "Are you sure you want to create a new Artefact? You can not go back and edit old records", "saveArtefact()", "");
+}
+
+onEvent("Artefacts/Artefact/Save", "click", "promptSave()");
+
+/** Map GPS **/
+
+startInternalGPS();
+
+initMap() {
+    setMapZoom("Artefacts/Map/map", 15.0f);
+    showBaseMap("Artefacts/Map/map", "base map", "files/data/maps/SydneyStreetmap.tif");
+
+    ps = createPointStyle(10, Color.BLUE, 0.2f, 0.5f);
+    ls = createLineStyle(10, Color.GREEN, 0.05f, 0.3f, null);
+    pos = createPolygonStyle(10, Color.parseColor("#440000FF"), createLineStyle(10, Color.parseColor("#AA000000"), 0.01f, 0.3f, null));
+    ts = createTextStyle(10, Color.WHITE, 40, Typeface.SANS_SERIF);
+    isEntity = true;
+    queryName = "Artefact_Points";
+    querySql = "";
+    //showDatabaseLayer("Artefacts/Map/map", "Saved Data Layer", isEntity, queryName, querySql, ps, ls, pos, ts); 
+}
+
+initMap();
+
+centreMap() {
+    if(!isExternalGPSOn() && !isInternalGPSOn()) {
+        showToast("GPS is not enabled.");
+    } else {
+        centerOnCurrentPosition("Artefacts/Map/map");
+    }
+}
+
+onEvent("Artefacts/Map/Map_Centre", "click", "centreMap()");
+
+projectedPos = getGPSPositionProjected();
+Point p = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle), null, null);
