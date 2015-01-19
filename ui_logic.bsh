@@ -23,6 +23,14 @@ makeLocalID() {
 
 makeLocalID();
 
+onEvent("Artefacts/Artefact/Take_Picture", "delayclick", "attachPictureTo(\"Artefacts/Artefact/Photos\");");
+
+fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attributekey using (attributeid) where attributename = 'Artefact Type';", new FetchCallback () {
+    onFetch(pictures) {
+        populatePictureGallery("Artefacts/Artefact/ArtefactType", pictures);
+    }
+});
+
 
 
 
