@@ -29,7 +29,7 @@ addActionBarItem("show_login", new ActionButtonCallback() {
 /*** USER ***/
 
 loadUsers() {
-    fetchAll("select userid, fname || ' ' || lname from user", new FetchCallback() {
+    fetchAll("select userid, fname || ' ' || lname from user where userdeleted is null", new FetchCallback() {
         onFetch(result) {
             populateDropDown("user/usertab/users", result);
         }
@@ -40,6 +40,7 @@ loadUsers() {
                 fetchOne("select userid,fname,lname,email from user where userid=" +result.get(0), new FetchCallback() {
                     onFetch(userdata) {
                         user = new User(userdata.get(0),userdata.get(1),userdata.get(2),userdata.get(3));
+                        userid=userdata.get(0);
                         setUser(user);
                         username = userdata.get(1) + " " + userdata.get(2);
                         showTabGroup("Artefacts");
@@ -73,47 +74,6 @@ login() {
 loadUsers();
 onEvent("user/usertab/login", "click", "login()");
 
-/** Artefact data entry **/
-
-onEvent("Artefacts/Artefact/Take_Picture", "delayclick", "attachPictureTo(\"Artefacts/Artefact/Photos\");");
-
-fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attributekey using (attributeid) where attributename = 'Artefact Type';", new FetchCallback () {
-    onFetch(pictures) {
-        populatePictureGallery("Artefacts/Artefact/ArtefactType", pictures);
-    }
-});
-
-/** Artefact saving **/
-
-clearPage() {
-    artefact_id = null;
-    newTab("Artefacts/Artefact");
-}
-
-promptClearPage() {
-    showAlert("alert", "Warning: Do you want to delete all data on the page?", "clearPage", "");
-}
-
-onEvent("Artefacts/Artefact/Cancel", "click", "promptClearPage()");
-
-artefact_id = null;
-
-saveArtefact() {
-    saveTabGroup("Artefacts", artefact_id, null, null, new SaveCallback() {
-        onSave(uuid, newRecord) {
-            //artefact_id = uuid;
-            showToast("New artefact saved");
-            clearPage();
-        }
-    });
-}
-
-promptSave() {
-    showAlert("alert", "Are you sure you want to create a new Artefact? You can not go back and edit old records", "saveArtefact()", "");
-}
-
-onEvent("Artefacts/Artefact/Save", "click", "promptSave()");
-
 /** Map GPS **/
 
 startInternalGPS();
@@ -125,14 +85,15 @@ initMap() {
     ps = createPointStyle(10, Color.BLUE, 0.2f, 0.5f);
     ls = createLineStyle(10, Color.GREEN, 0.05f, 0.3f, null);
     pos = createPolygonStyle(10, Color.parseColor("#440000FF"), createLineStyle(10, Color.parseColor("#AA000000"), 0.01f, 0.3f, null));
-    ts = createTextStyle(10, Color.WHITE, 40, Typeface.SANS_SERIF);
+    ts = createTextStyle(10, Color.BLACK, 40, Typeface.SANS_SERIF);
     isEntity = true;
     queryName = "Artefact_Points";
-    querySql = "";
-    //showDatabaseLayer("Artefacts/Map/map", "Saved Data Layer", isEntity, queryName, querySql, ps, ls, pos, ts); 
+    querySql = "SELECT uuid, aenttimestamp FROM latestNonDeletedArchEnt join aenttype using (aenttypeid) where aenttypename = 'Artefact' and userid ="+userid;
+    showDatabaseLayer("Artefacts/Map/map", "Points Ive found", isEntity, queryName, querySql, ps, ls, pos, ts); 
 }
 
 initMap();
+setSelectedLayer("Artefacts/Map/map", "Points Ive found");
 
 centreMap() {
     if(!isExternalGPSOn() && !isInternalGPSOn()) {
@@ -144,5 +105,73 @@ centreMap() {
 
 onEvent("Artefacts/Map/Map_Centre", "click", "centreMap()");
 
-projectedPos = getGPSPositionProjected();
-Point p = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle), null, null);
+Point pos = null;
+
+currentPoint() {
+    positionProj = getGPSPositionProjected();
+    if (positionProj == null) {
+        showWarning("warning", "GPS has not been started or a position has not been found");
+    } else {
+        pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
+        showToast("Current GPS point updated");
+        print("pos: " + pos);        
+    }
+}
+
+onEvent("Artefacts/Artefact/Current_Point", "click", "currentPoint()");
+
+/** Artefact data entry **/
+
+onEvent("Artefacts/Artefact/Take_Picture", "delayclick", "attachPictureTo(\"Artefacts/Artefact/Photos\");");
+
+fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attributekey using (attributeid) where attributename = 'Artefact Type';", new FetchCallback () {
+    onFetch(pictures) {
+        populatePictureGallery("Artefacts/Artefact/Artefact_Type", pictures);
+    }
+});
+
+/** Artefact saving **/
+
+clearPage() {
+    // make new tab and mark previous one as 'deleted', but don't actually remove it.
+    artefact_id = null;
+    newTab("Artefacts/Artefact");
+}
+
+promptClearPage() {
+    showAlert("alert", "Do you want to delete all data on the page?", "clearPage", "");
+}
+
+onEvent("Artefacts/Artefact/Cancel", "click", "promptClearPage()");
+
+artefact_id = null;
+
+saveArtefact() {
+    if (pos == null) {
+        currentPoint();
+        print("pos is null");
+    }
+    if (pos != null) {
+        print("hello");
+        ArrayList geolist = new ArrayList();
+        geolist.add(pos);
+        saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {
+            onSave(uuid, newRecord) {
+                //artefact_id = uuid;
+                showToast("New artefact saved");
+                clearPage();
+            }    
+        });
+        print("world");
+    } else {
+        print("foo");
+        showWarning("warning", "Cannot save Artefact: no GPS position found");
+    }
+}
+
+promptSave() {
+    showAlert("alert", "Are you sure you want to create a new Artefact? You can not go back and edit old records", "saveArtefact()", "");
+}
+
+onEvent("Artefacts/Artefact/Save", "click", "promptSave()");
+

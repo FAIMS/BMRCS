@@ -100,14 +100,14 @@
         <trigger ref="Take_Picture">
           <label>{Take_Picture}</label>
         </trigger>
-        <select1 type="image" ref="Artefact_Type" faims_attribute_name="Artefact Type" faims_attribute_type="vocab">
+        <select1 type="image" ref="Artefact_Type" faims_attribute_name="Artefact Type" faims_attribute_type="vocab" faims_certainty="false">
           <label>{Artefact_Type}</label>
           <item>
             <label>placeholder</label>
             <value>placeholder</value>
           </item>
         </select1>
-        <input ref="Description" faims_attribute_name="Description" faims_attribute_type="measure">
+        <input ref="Description" faims_attribute_name="Description" faims_attribute_type="measure" faims_certainty="false">
           <label>{Description}</label>
         </input>
         <trigger ref="Current_Point">
