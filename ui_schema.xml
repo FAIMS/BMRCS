@@ -45,6 +45,10 @@
               <Cancel/>
               <Save/>
             </Artefact>
+            <Metadata>
+              <accuracy/>
+              <heading/>
+            </Metadata>
           </Artefacts>
         </faims>
       </instance>
@@ -149,6 +153,15 @@
         <trigger ref="Save">
           <label>{Save}</label>
         </trigger>
+      </group>
+      <group ref="Metadata" faims_hidden="true">
+        <label/>
+        <input ref="accuracy" faims_attribute_name="GPS_Accuracy" faims_attribute_type="measure" faims_certainty="false">
+          <label/>
+        </input>
+        <input ref="heading" faims_attribute_name="GPS_Heading" faims_attribute_type="measure" faims_certainty="false">
+          <label/>
+        </input>
       </group>
     </group>
   </h:body>

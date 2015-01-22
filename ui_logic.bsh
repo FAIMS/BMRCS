@@ -71,18 +71,25 @@ setSelectedLayer("Map/map/map", "Points Ive found");
 
 Point pos = null;
 
-currentPoint() {
+takePoint() {
     positionProj = getGPSPositionProjected();
     if (positionProj == null) {
         showToast("GPS position not found");
     } else {
+        // update the GPS point and save/overwrite the record
         pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
         showToast("Current GPS point updated");
-        print("pos: " + pos);        
+        ArrayList geolist = new ArrayList();
+        geolist.add(pos);
+        accuracy = getGPSEstimatedAccuracy();
+        setFieldValue("Artefacts/Metadata/accuracy", accuracy);
+        heading = getGPSHeading();
+        setFieldValue("Artefacts/Metadata/heading", heading);
+        saveTabGroup("Artefacts", artefact_id, geolist, null, null);
     }
 }
 
-onEvent("Artefacts/Artefact/Current_Point", "click", "currentPoint()");
+onEvent("Artefacts/Artefact/Current_Point", "click", "takePoint()");
 
 centreMap() {
     if(!isExternalGPSOn() && !isInternalGPSOn()) {
@@ -90,7 +97,7 @@ centreMap() {
     } else {
         if (pos == null) {
             showToast("setting GPS position");
-            currentPoint();
+            takePoint();
         }
         centerOnCurrentPosition("Map/map/map");
     }
@@ -111,12 +118,6 @@ fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attrib
 });
 
 /** Artefact saving and cancelling **/
-
-/**
- *
- * Currently take/centre point doesn't update gemoetry in artefact record. (BMRCS-20)
- *
- **/
 
 clearPage() {
     deleteArchEnt(artefact_id, new DeleteCallback() {
@@ -155,11 +156,9 @@ saveArtefact() {
         geolist.add(pos);
         saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {
             onSave(uuid, newRecord) {
-                //artefact_id = uuid;
+                //artefact_id = null;
                 showToast("New artefact saved");
-                //clearPage();
                 newTab("Artefacts/Artefact");
-                artefact_id = null;
             }    
         });
     } else {
@@ -214,7 +213,7 @@ login() {
             setUser(user);
             username = result.get(1) + " " + result.get(2);
             fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+ userid +"');", null);
-            currentPoint();
+            takePoint();
             showTabGroup("Map");
         }
     });
