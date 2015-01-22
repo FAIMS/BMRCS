@@ -26,13 +26,35 @@ addActionBarItem("show_login", new ActionButtonCallback() {
     }
 });
 
+transitionToArtefacts() {
+   //  dialog = showBusy("Unable to obtain a GPS position", "please wait");
+   //  dialog.setCancelable(false);
+
+   //  while(pos == null) {
+   //      if (getGPSPositionProjected() != null) {
+   //          positionProj = getGPSPositionProjected();
+   //          pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
+   //      }
+   //  }
+   // if (pos != null) {
+   //      dialog.dismiss();
+   //      showTabGroup("Artefacts");    
+   // }
+    if (pos == null) {
+        showWarning("warning", "A GPS position needs to be found before recording a new artefact.");
+    } else {
+        showTabGroup("Artefacts");
+    }
+
+}
+
 /** Map GPS **/
 
 startInternalGPS();
 
 initMap() {
-    setMapZoom("Artefacts/Map/map", 15.0f);
-    showBaseMap("Artefacts/Map/map", "base map", "files/data/maps/SydneyStreetmap.tif");
+    setMapZoom("Map/map/map", 15.0f);
+    showBaseMap("Map/map/map", "base map", "files/data/maps/SydneyStreetmap.tif");
 
     ps = createPointStyle(10, Color.BLUE, 0.2f, 0.5f);
     ls = createLineStyle(10, Color.GREEN, 0.05f, 0.3f, null);
@@ -41,11 +63,11 @@ initMap() {
     isEntity = true;
     queryName = "Artefact_Points";
     querySql = "SELECT uuid, aenttimestamp FROM latestNonDeletedArchEnt join aenttype using (aenttypeid) where aenttypename = 'Artefact' and userid ="+userid;
-    showDatabaseLayer("Artefacts/Map/map", "Points Ive found", isEntity, queryName, querySql, ps, ls, pos, ts); 
+    showDatabaseLayer("Map/map/map", "Points Ive found", isEntity, queryName, querySql, ps, ls, pos, ts); 
 }
 
 initMap();
-setSelectedLayer("Artefacts/Map/map", "Points Ive found");
+setSelectedLayer("Map/map/map", "Points Ive found");
 
 Point pos = null;
 
@@ -65,14 +87,18 @@ onEvent("Artefacts/Artefact/Current_Point", "click", "currentPoint()");
 centreMap() {
     if(!isExternalGPSOn() && !isInternalGPSOn()) {
         showToast("GPS is not enabled.");
-    } else if (pos == null) {
-        showToast("GPS position not found.");
     } else {
-        centerOnCurrentPosition("Artefacts/Map/map");
+        if (pos == null) {
+            showToast("setting GPS position");
+            currentPoint();
+        }
+        centerOnCurrentPosition("Map/map/map");
     }
 }
 
-onEvent("Artefacts/Map/Map_Centre", "click", "centreMap()");
+onEvent("Map/map/Map_Centre", "click", "centreMap()");
+onEvent("Map/map/Record_Artefact", "click", "transitionToArtefacts()");
+onEvent("Artefacts/Artefact/View_Map", "click", "showTabGroup(\"Map\");");
 
 /** Artefact data entry **/
 
@@ -85,6 +111,12 @@ fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attrib
 });
 
 /** Artefact saving and cancelling **/
+
+/**
+ *
+ * Currently take/centre point doesn't update gemoetry in artefact record. (BMRCS-20)
+ *
+ **/
 
 clearPage() {
     deleteArchEnt(artefact_id, new DeleteCallback() {
@@ -125,7 +157,9 @@ saveArtefact() {
             onSave(uuid, newRecord) {
                 //artefact_id = uuid;
                 showToast("New artefact saved");
-                clearPage();
+                //clearPage();
+                newTab("Artefacts/Artefact");
+                artefact_id = null;
             }    
         });
     } else {
@@ -140,22 +174,6 @@ promptSave() {
 onEvent("Artefacts/Artefact/Save", "click", "promptSave()");
 
 /*** USER ***/
-
-transitionToArtefacts() {
-    dialog = showBusy("Unable to obtain a GPS position", "please wait");
-    dialog.setCancelable(false);
-
-    while(pos == null) {
-        if (getGPSPositionProjected() != null) {
-            positionProj = getGPSPositionProjected();
-            pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
-        }
-    }
-    if (pos != null) {
-        dialog.dismiss();
-        showTabGroup("Artefacts");    
-    }
-}
 
 loadUsers() {
     fetchAll("select userid, fname || ' ' || lname from user where userdeleted is null", new FetchCallback() {
@@ -173,7 +191,7 @@ loadUsers() {
                         userid=userdata.get(0);
                         setUser(user);
                         username = userdata.get(1) + " " + userdata.get(2);
-                        transitionToArtefacts();
+                        showTabGroup("Map");
                     }
                 });
             }
@@ -197,7 +215,7 @@ login() {
             username = result.get(1) + " " + result.get(2);
             fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+ userid +"');", null);
             currentPoint();
-            transitionToArtefacts();
+            showTabGroup("Map");
         }
     });
 }

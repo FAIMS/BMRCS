@@ -21,27 +21,30 @@
               <login/>
             </usertab>
           </user>
-          <Artefacts>
-            <Artefact>
-              <Photos/>
-              <Take_Picture/>
-              <Artefact_Type/>
-              <Description/>
-              <Current_Point/>
-              <Cancel/>
-              <Save/>
-            </Artefact>
-            <Map>
+          <Map>
+            <map>
               <map/>
               <container1>
                 <child1>
                   <Map_Centre/>
                 </child1>
                 <child2>
-                  <Map_Settings/>
+                  <Record_Artefact/>
                 </child2>
               </container1>
-            </Map>
+            </map>
+          </Map>
+          <Artefacts>
+            <Artefact>
+              <Photos/>
+              <Take_Picture/>
+              <Artefact_Type/>
+              <Description/>
+              <View_Map/>
+              <Current_Point/>
+              <Cancel/>
+              <Save/>
+            </Artefact>
           </Artefacts>
         </faims>
       </instance>
@@ -86,6 +89,30 @@
         </trigger>
       </group>
     </group>
+    <group ref="Map" faims_scrollable="false">
+      <label>{Map}</label>
+      <group ref="map" faims_scrollable="false">
+        <label/> 
+        <input ref="map" faims_map="true" faims_certainty="false">
+          <label/>
+        </input>
+        <group faims_style="orientation" ref="container1">
+          <label/>
+          <group faims_style="even" ref="child1">
+            <label/>
+            <trigger ref="Map_Centre">
+              <label>{Map_Centre}</label>
+            </trigger>
+          </group>
+          <group faims_style="even" ref="child2">
+            <label/>
+            <trigger ref="Record_Artefact">
+              <label>{Record_Artefact}</label>
+            </trigger>
+          </group>
+        </group>
+      </group>
+    </group>
     <group ref="Artefacts" faims_archent_type="Artefact">
       <label>{Artefacts}</label>
       <group ref="Artefact">
@@ -110,6 +137,9 @@
         <input ref="Description" faims_attribute_name="Description" faims_attribute_type="measure" faims_certainty="false">
           <label>{Description}</label>
         </input>
+        <trigger ref="View_Map">
+          <label>{View_Map}</label>
+        </trigger>
         <trigger ref="Current_Point">
           <label>{Current_Point}</label>
         </trigger>
@@ -119,27 +149,6 @@
         <trigger ref="Save">
           <label>{Save}</label>
         </trigger>
-      </group>
-      <group ref="Map" faims_scrollable="false">
-        <label>{Map}</label>
-         <input ref="map" faims_map="true" faims_certainty="false">
-          <label/>
-        </input>
-        <group faims_style="orientation" ref="container1">
-          <label/>
-          <group faims_style="even" ref="child1">
-            <label/>
-            <trigger ref="Map_Centre">
-              <label>{Map_Centre}</label>
-            </trigger>
-          </group>
-          <group faims_style="even" ref="child2">
-            <label/>
-            <trigger ref="Map_Settings">
-              <label>{Map_Settings}</label>
-            </trigger>
-          </group>
-        </group>
       </group>
     </group>
   </h:body>
