@@ -26,54 +26,6 @@ addActionBarItem("show_login", new ActionButtonCallback() {
     }
 });
 
-/*** USER ***/
-
-loadUsers() {
-    fetchAll("select userid, fname || ' ' || lname from user where userdeleted is null", new FetchCallback() {
-        onFetch(result) {
-            populateDropDown("user/usertab/users", result);
-        }
-    });
-    fetchOne("select value from localSettings where key = 'User';", new FetchCallback() {
-        onFetch(result) {
-            if(!isNull(result)) {
-                fetchOne("select userid,fname,lname,email from user where userid=" +result.get(0), new FetchCallback() {
-                    onFetch(userdata) {
-                        user = new User(userdata.get(0),userdata.get(1),userdata.get(2),userdata.get(3));
-                        userid=userdata.get(0);
-                        setUser(user);
-                        username = userdata.get(1) + " " + userdata.get(2);
-                        showTabGroup("Artefacts");
-                    }
-                });
-            }
-        }
-
-        onError(message) {
-                    showToast(message);
-        }
-    });
-}
-
-String username = "";
-String device = "";
-
-login() {
-    userid = getFieldValue("user/usertab/users");
-    fetchOne("select userid,fname,lname,email from user where userid='" + userid + "';", new FetchCallback() {
-        onFetch(result) {
-            user = new User(result.get(0),result.get(1),result.get(2),result.get(3));
-            setUser(user);
-            username = result.get(1) + " " + result.get(2);
-            fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+ userid +"');", null);
-            showTabGroup("Artefacts");
-        }
-    });
-}
-
-loadUsers();
-onEvent("user/usertab/login", "click", "login()");
-
 /** Map GPS **/
 
 startInternalGPS();
@@ -95,22 +47,12 @@ initMap() {
 initMap();
 setSelectedLayer("Artefacts/Map/map", "Points Ive found");
 
-centreMap() {
-    if(!isExternalGPSOn() && !isInternalGPSOn()) {
-        showToast("GPS is not enabled.");
-    } else {
-        centerOnCurrentPosition("Artefacts/Map/map");
-    }
-}
-
-onEvent("Artefacts/Map/Map_Centre", "click", "centreMap()");
-
 Point pos = null;
 
 currentPoint() {
     positionProj = getGPSPositionProjected();
     if (positionProj == null) {
-        showWarning("warning", "GPS has not been started or a position has not been found");
+        showToast("GPS position not found");
     } else {
         pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
         showToast("Current GPS point updated");
@@ -119,6 +61,18 @@ currentPoint() {
 }
 
 onEvent("Artefacts/Artefact/Current_Point", "click", "currentPoint()");
+
+centreMap() {
+    if(!isExternalGPSOn() && !isInternalGPSOn()) {
+        showToast("GPS is not enabled.");
+    } else if (pos == null) {
+        showToast("GPS position not found.");
+    } else {
+        centerOnCurrentPosition("Artefacts/Map/map");
+    }
+}
+
+onEvent("Artefacts/Map/Map_Centre", "click", "centreMap()");
 
 /** Artefact data entry **/
 
@@ -130,29 +84,41 @@ fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attrib
     }
 });
 
-/** Artefact saving **/
+/** Artefact saving and cancelling **/
 
 clearPage() {
-    // make new tab and mark previous one as 'deleted', but don't actually remove it.
-    artefact_id = null;
-    newTab("Artefacts/Artefact");
+    deleteArchEnt(artefact_id, new DeleteCallback() {
+        onDelete(uuid) {
+            newTab("Artefacts/Artefact");
+            artefact_id = null;
+        }
+    });
 }
 
 promptClearPage() {
-    showAlert("alert", "Do you want to delete all data on the page?", "clearPage", "");
+    showAlert("alert", "Do you want to delete all data on the page?", "clearPage()", "");
 }
 
 onEvent("Artefacts/Artefact/Cancel", "click", "promptClearPage()");
 
 artefact_id = null;
+enable_autosave = true;
+keepTabGroupChanges("Artefacts");
+
+autoSaveArtefact() {
+    if (pos == null) {
+        showWarning("warning", "Auto-save not enabled: GPS position not found");
+    } else {
+        ArrayList geolist = new ArrayList();
+        geolist.add(pos);
+        saveTabGroup("Artefacts", artefact_id, geolist, null, null, enable_autosave);    
+    }
+}
+
+onEvent("Artefacts", "show", "autoSaveArtefact()");
 
 saveArtefact() {
-    if (pos == null) {
-        currentPoint();
-        print("pos is null");
-    }
     if (pos != null) {
-        print("hello");
         ArrayList geolist = new ArrayList();
         geolist.add(pos);
         saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {
@@ -162,10 +128,8 @@ saveArtefact() {
                 clearPage();
             }    
         });
-        print("world");
     } else {
-        print("foo");
-        showWarning("warning", "Cannot save Artefact: no GPS position found");
+        showWarning("warning", "Cannot save Artefact: GPS position not found");
     }
 }
 
@@ -174,4 +138,70 @@ promptSave() {
 }
 
 onEvent("Artefacts/Artefact/Save", "click", "promptSave()");
+
+/*** USER ***/
+
+transitionToArtefacts() {
+    dialog = showBusy("Unable to obtain a GPS position", "please wait");
+    dialog.setCancelable(false);
+
+    while(pos == null) {
+        if (getGPSPositionProjected() != null) {
+            positionProj = getGPSPositionProjected();
+            pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
+        }
+    }
+    if (pos != null) {
+        dialog.dismiss();
+        showTabGroup("Artefacts");    
+    }
+}
+
+loadUsers() {
+    fetchAll("select userid, fname || ' ' || lname from user where userdeleted is null", new FetchCallback() {
+        onFetch(result) {
+            populateDropDown("user/usertab/users", result);
+        }
+    });
+    // Auto-login user if previously logged in.
+    fetchOne("select value from localSettings where key = 'User';", new FetchCallback() {
+        onFetch(result) {
+            if(!isNull(result)) {
+                fetchOne("select userid,fname,lname,email from user where userid=" +result.get(0), new FetchCallback() {
+                    onFetch(userdata) {
+                        user = new User(userdata.get(0),userdata.get(1),userdata.get(2),userdata.get(3));
+                        userid=userdata.get(0);
+                        setUser(user);
+                        username = userdata.get(1) + " " + userdata.get(2);
+                        transitionToArtefacts();
+                    }
+                });
+            }
+        }
+
+        onError(message) {
+            showToast(message);
+        }
+    });
+}
+
+String username = "";
+String device = "";
+
+login() {
+    userid = getFieldValue("user/usertab/users");
+    fetchOne("select userid,fname,lname,email from user where userid='" + userid + "';", new FetchCallback() {
+        onFetch(result) {
+            user = new User(result.get(0),result.get(1),result.get(2),result.get(3));
+            setUser(user);
+            username = result.get(1) + " " + result.get(2);
+            fetchOne("REPLACE INTO localSettings(key, value) VALUES('User', '"+ userid +"');", null);
+            currentPoint();
+            transitionToArtefacts();
+        }
+    });
+}
+
+loadUsers();
+onEvent("user/usertab/login", "click", "login()");
 
