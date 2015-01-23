@@ -31,28 +31,19 @@ artefact_id = null;
 enable_autosave = true;
 Point artefact_point = null;
 
-
 transitionToArtefacts() {
-   //  dialog = showBusy("Unable to obtain a GPS position", "please wait");
-   //  dialog.setCancelable(false);
-
-   //  while(artefact_point == null) {
-   //      if (getGPSPositionProjected() != null) {
-   //          positionProj = getGPSPositionProjected();
-   //          artefact_point = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
-   //      }
-   //  }
-   // if (artefact_point != null) {
-   //      dialog.dismiss();
-   //      showTabGroup("Artefacts");    
-   // }
-    if (artefact_point == null) {
-        showWarning("warning", "A GPS position needs to be found before recording a new artefact. Try centering the map on your current position.");
-    } else {
+    busyDialog = showBusy("Initialising GPS", "please wait");
+    if (isInternalGPSOn() && getGPSPositionProjected() != null) {
+        positionProj = getGPSPositionProjected();
+        artefact_point = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
         artefact_id = null;
         newTabGroup("Artefacts");
+        busyDialog.dismiss();   
+    } else {
+        takePoint();
+        showWarning("Warning", "A GPS signal could not be found, try recording a new Artefact when within GPS range.");
+        busyDialog.dismiss();
     }
-
 }
 
 /** Map GPS **/
