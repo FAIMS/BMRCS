@@ -47,9 +47,10 @@ transitionToArtefacts() {
    //      showTabGroup("Artefacts");    
    // }
     if (artefact_point == null) {
-        showWarning("warning", "A GPS position needs to be found before recording a new artefact.");
+        showWarning("warning", "A GPS position needs to be found before recording a new artefact. Try centering the map on your current position.");
     } else {
-        showTabGroup("Artefacts");
+        artefact_id = null;
+        newTabGroup("Artefacts");
     }
 
 }
@@ -89,7 +90,7 @@ takePoint() {
         setFieldValue("Artefacts/Metadata/accuracy", accuracy);
         heading = getGPSHeading();
         setFieldValue("Artefacts/Metadata/heading", heading);
-        saveArchEnt(artefact_id, "Artefacts", geolist, null, null);
+        saveArchEnt(artefact_id, "Artefact", geolist, null, null);
     }
 }
 
@@ -164,12 +165,9 @@ saveArtefact() {
     if (artefact_point != null) {
         ArrayList geolist = new ArrayList();
         geolist.add(artefact_point);
-        saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {
-            onSave(uuid, newRecord) {
-                //artefact_id = uuid;
-                showToast("New artefact saved");
-                clearArtefact();
-            }    
+        saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {    
+            showToast("New artefact saved");
+            clearArtefact();    
         });
     } else {
         showWarning("warning", "Cannot save Artefact: GPS position not found");
@@ -200,6 +198,7 @@ loadUsers() {
                         userid=userdata.get(0);
                         setUser(user);
                         username = userdata.get(1) + " " + userdata.get(2);
+                        takePoint();
                         showTabGroup("Map");
                     }
                 });
