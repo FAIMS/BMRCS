@@ -26,21 +26,27 @@ addActionBarItem("show_login", new ActionButtonCallback() {
     }
 });
 
+/** Globals **/
+artefact_id = null;
+enable_autosave = true;
+Point artefact_point = null;
+
+
 transitionToArtefacts() {
    //  dialog = showBusy("Unable to obtain a GPS position", "please wait");
    //  dialog.setCancelable(false);
 
-   //  while(pos == null) {
+   //  while(artefact_point == null) {
    //      if (getGPSPositionProjected() != null) {
    //          positionProj = getGPSPositionProjected();
-   //          pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
+   //          artefact_point = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
    //      }
    //  }
-   // if (pos != null) {
+   // if (artefact_point != null) {
    //      dialog.dismiss();
    //      showTabGroup("Artefacts");    
    // }
-    if (pos == null) {
+    if (artefact_point == null) {
         showWarning("warning", "A GPS position needs to be found before recording a new artefact.");
     } else {
         showTabGroup("Artefacts");
@@ -69,23 +75,21 @@ initMap() {
 initMap();
 setSelectedLayer("Map/map/map", "Points Ive found");
 
-Point pos = null;
-
 takePoint() {
     positionProj = getGPSPositionProjected();
     if (positionProj == null) {
         showToast("GPS position not found");
     } else {
         // update the GPS point and save/overwrite the record
-        pos = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
+        artefact_point = new Point(new MapPos(positionProj.getLongitude(), positionProj.getLatitude()), null, (PointStyle) null, null);
         showToast("Current GPS point updated");
         ArrayList geolist = new ArrayList();
-        geolist.add(pos);
+        geolist.add(artefact_point);
         accuracy = getGPSEstimatedAccuracy();
         setFieldValue("Artefacts/Metadata/accuracy", accuracy);
         heading = getGPSHeading();
         setFieldValue("Artefacts/Metadata/heading", heading);
-        saveTabGroup("Artefacts", artefact_id, geolist, null, null);
+        saveArchEnt(artefact_id, "Artefacts", geolist, null, null);
     }
 }
 
@@ -95,7 +99,7 @@ centreMap() {
     if(!isExternalGPSOn() && !isInternalGPSOn()) {
         showToast("GPS is not enabled.");
     } else {
-        if (pos == null) {
+        if (artefact_point == null) {
             showToast("setting GPS position");
             takePoint();
         }
@@ -119,46 +123,52 @@ fetchAll("select vocabid, vocabname, pictureurl from vocabulary left join attrib
 
 /** Artefact saving and cancelling **/
 
-clearPage() {
+clearArtefact() {
+    newTabGroup("Artefacts");
+    artefact_id = null;
+    autoSaveArtefact();
+}
+
+deleteArtefact() {
     deleteArchEnt(artefact_id, new DeleteCallback() {
         onDelete(uuid) {
-            newTab("Artefacts/Artefact");
-            artefact_id = null;
+            clearArtefact();
         }
     });
 }
 
 promptClearPage() {
-    showAlert("alert", "Do you want to delete all data on the page?", "clearPage()", "");
+    showAlert("alert", "Do you want to delete all data on the page?", "deleteArtefact()", "");
 }
 
 onEvent("Artefacts/Artefact/Cancel", "click", "promptClearPage()");
 
-artefact_id = null;
-enable_autosave = true;
-keepTabGroupChanges("Artefacts");
-
 autoSaveArtefact() {
-    if (pos == null) {
+    if (artefact_point == null) {
         showWarning("warning", "Auto-save not enabled: GPS position not found");
     } else {
         ArrayList geolist = new ArrayList();
-        geolist.add(pos);
-        saveTabGroup("Artefacts", artefact_id, geolist, null, null, enable_autosave);    
+        geolist.add(artefact_point);
+        saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {
+            onSave(uuid, newRecord) {
+                artefact_id = uuid;
+            }
+        }, enable_autosave);    
     }
 }
 
+keepTabGroupChanges("Artefacts");
 onEvent("Artefacts", "show", "autoSaveArtefact()");
 
 saveArtefact() {
-    if (pos != null) {
+    if (artefact_point != null) {
         ArrayList geolist = new ArrayList();
-        geolist.add(pos);
+        geolist.add(artefact_point);
         saveTabGroup("Artefacts", artefact_id, geolist, null, new SaveCallback() {
             onSave(uuid, newRecord) {
-                //artefact_id = null;
+                //artefact_id = uuid;
                 showToast("New artefact saved");
-                newTab("Artefacts/Artefact");
+                clearArtefact();
             }    
         });
     } else {

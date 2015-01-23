@@ -40,10 +40,22 @@
               <Take_Picture/>
               <Artefact_Type/>
               <Description/>
-              <View_Map/>
-              <Current_Point/>
-              <Cancel/>
-              <Save/>
+              <container1>
+                <child1>
+                  <View_Map/>
+                </child1>
+                <child2>
+                  <Current_Point/>
+                </child2>
+              </container1>
+              <container2>
+                <child1>
+                  <Cancel/>
+                </child1>
+                <child2>
+                  <Save/>
+                </child2>
+              </container2>
             </Artefact>
             <Metadata>
               <accuracy/>
@@ -141,18 +153,36 @@
         <input ref="Description" faims_attribute_name="Description" faims_attribute_type="measure" faims_certainty="false">
           <label>{Description}</label>
         </input>
-        <trigger ref="View_Map">
-          <label>{View_Map}</label>
-        </trigger>
-        <trigger ref="Current_Point">
-          <label>{Current_Point}</label>
-        </trigger>
-        <trigger ref="Cancel">
-          <label>{Cancel}</label>
-        </trigger>
-        <trigger ref="Save">
-          <label>{Save}</label>
-        </trigger>
+        <group faims_style="orientation" ref="container1">
+          <label/>
+          <group faims_style="even" ref="child1">
+            <label/>
+            <trigger ref="View_Map">
+              <label>{View_Map}</label>
+            </trigger>
+          </group>
+          <group faims_style="even" ref="child2">
+            <label/>
+            <trigger ref="Current_Point">
+              <label>{Current_Point}</label>
+            </trigger>
+          </group>
+        </group>
+        <group faims_style="orientation" ref="container2">
+          <label/>
+          <group faims_style="even" ref="child1">
+            <label/>
+            <trigger ref="Cancel">
+              <label>{Cancel}</label>
+            </trigger>
+          </group>
+          <group faims_style="even" ref="child2">
+            <label/>
+            <trigger ref="Save">
+              <label>{Save}</label>
+            </trigger>
+          </group>
+        </group>
       </group>
       <group ref="Metadata" faims_hidden="true">
         <label/>
